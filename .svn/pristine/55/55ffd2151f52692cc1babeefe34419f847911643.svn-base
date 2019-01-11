@@ -1,0 +1,117 @@
+<template>
+  <div class="alarm-wrap flex align-center">
+    <transition>
+      <div class="list" v-if="alarmList.length">
+          <div class="item">
+            <Alert type="error" class="error-item" closable @on-close="handleClose">
+            <span class="alarm pr">
+              <div class="animate pa alarm-circle alarm-ani"></div>
+              <Icon type="ios-notifications" color="#ef0b0b" size="20"/>
+            </span>
+            <span v-html="alarmItem && alarmItem.name" class="name"></span>
+            <span>报警...</span>
+          </Alert>
+            <audio src="/static/sos.wav" :autoplay="isRecieveSos" loop></audio>
+          </div>
+      </div>
+    </transition>
+    <Modal 
+       v-model="isAlarm"
+       :mask-closable="false"
+       width="400">
+       <p slot="header">
+            <Icon type="ios-information-circle" color="#f60" size="22"></Icon>
+            <span class="modal-title">报警提示</span>
+        </p>
+        <p class="f-black">{{alarmItem && alarmItem.name}}正在报警</p>
+        <div slot="footer">
+            <Button type="primary" size="large" @click.stop="isAlarm=false">知道了</Button>
+        </div>
+    </Modal>
+  </div>
+</template>
+
+<script>
+import * as app from '@/store/types/app'
+export default {
+  name: 'Alarm',
+  computed: {
+    alarmList: {
+      get () {
+        return this.$store.state.app.alarmList
+      },
+      set (val) {
+        this.$store.commit(app.SetAlarmList, val)
+      }
+    },
+    alarmItem () {
+      let list = this.$store.state.app.alarmList
+      if (list && list.length) {
+        return list[0]
+      }
+    },
+    isRecieveSos () {
+      let settingItems = this.$store.state.app.settingItems
+      if (settingItems) {
+        return settingItems.sosVoice.val
+      }
+    },
+    isAlarm: {
+      get () {
+        return this.$store.state.app.isAlarm
+      },
+      set (val) {
+        this.$store.commit(app.SetIsAlarm, val)
+      }
+    }
+  },
+  methods: {
+    handleClose () {
+      let list = [...this.alarmList]
+      list.splice(0, 1)
+      this.alarmList = list
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.alarm-wrap
+  padding-right 10px
+  position fixed
+  right 15px
+  top 105px
+  z-index 2
+  .list
+    padding 0
+    height 100px
+    .item
+      color #b10505
+    .name
+      font-weight bold
+.alarm
+  padding-right 8px
+.alarm-circle
+  width 20px
+  height 20px
+  border 2px solid #ef0b0b
+  top 0
+  left 0
+  border-radius 50%
+  transform scale(1, .2)
+.error-item
+  height 49px
+  width 335px
+  text-align left
+  box-shadow 0 1px 6px rgba(0,0,0,.2)
+  &.ivu-alert
+    padding 14px 40px 5px 10px !important
+.ivu-alert-close
+  top 25px !important
+.v-enter,.v-leave-to
+      transform translateX(400px)
+  .v-enter-active,
+  .v-leave-active
+      transition all 0.3s ease-in
+</style>
+

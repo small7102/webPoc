@@ -1,0 +1,82 @@
+import * as types from '../types/user'
+import { login, switchGroup } from '@/libs/webDispatcher-sdk.js'
+import * as appTypes from '../types/app'
+import * as log from '../types/log'
+import * as group from '../types/group'
+import Storage from '@/utils/localStorage'
+import {codeConfig} from '@/libs/codeConfig'
+
+export default {
+  state: {
+    userInfo: '',
+    mySocket: null,
+    language: 'English',
+    isOnline: false
+  },
+  getters: {
+    userInfo: state => state.userInfo,
+    mySocket: state => state.mySocket,
+    language: state => state.language
+  },
+  mutations: {
+    [types.SetUserInfo] (state, info) {
+      state.userInfo = info
+    },
+    [types.SetMySocket] (state, newState) {
+      state.mySocket = newState
+    },
+    [types.SetLanguage] (state, language) {
+      state.language = language
+    },
+    [types.SetIsOnline] (state, bool) {
+      state.isOnline = bool
+    }
+  },
+  actions: {
+    [types.GetUserInfo] ({commit, state}, {account, password, language, voiceList, msnList}) {
+      return new Promise((resolve, reject) => {
+        login(account, password, (res) => {
+          if (res && res.code === 0 && res.msType === '20') {
+            let isLogin = true
+            Storage.sessionSet('isLogin', isLogin)
+            Storage.sessionSet('user', {account, password, language})
+            let obj = {}
+            obj[account] = language
+            Storage.localSet('language', obj) // 语言存本地
+            if (voiceList) commit(appTypes.SetVoiceList, voiceList)
+            if (msnList) commit(group.SetMessageList, msnList)
+            commit(types.SetLanguage, language)
+            commit(types.SetIsOnline, true)
+            commit(types.SetUserInfo, res)
+            commit(log.SaveLog, {account: account, name: res.msName, type: codeConfig.loginNotice, remark: ''})
+            resolve(0)
+          } else if (res && res.code === '503') {
+            reject(res.code)
+          } else if (res && res.msType !== '20') {
+            res.code === 0 ? reject(6) : reject(res.code)
+          }
+        })
+      })
+    },
+    [types.SwitchGroup] ({commit, state}, item) {
+      commit(appTypes.SetAppLoading, true)
+      return new Promise((resolve, reject) => {
+        switchGroup(item.gid, res => {
+          commit(appTypes.SetAppLoading, false)
+          if (res && res.code === 0) {
+            let userInfo = {...state.userInfo, pttGroup: item.name, gId: item.gid}
+            commit(log.SaveLog, {
+              account: state.userInfo.msId,
+              name: state.userInfo.msName,
+              type: codeConfig.switchNotice,
+              remark: `[${state.userInfo.pttGroup}] To [${item.name}]`})
+            commit(types.SetUserInfo, userInfo)
+            resolve(8)
+          } else {
+            reject(res.code)
+          }
+        })
+      })
+    }
+  }
+}

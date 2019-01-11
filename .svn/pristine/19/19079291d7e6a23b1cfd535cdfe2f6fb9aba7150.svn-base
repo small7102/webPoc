@@ -1,0 +1,275 @@
+@import "variable.styl"
+
+body, html
+  line-height: 1
+  font-family: 'PingFang SC', 'STHeitiSC-Light', 'Helvetica-Light', arial, sans-serif, 'Droid Sans Fallback'
+  tap-highlight-color: transparent
+  color: $color-text
+  user-select none
+
+html, body
+  background: $color-background
+  height 100%
+  min-height 600px
+  min-width 1260px
+
+body
+  font-size: $font-size-medium
+
+input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill
+  -webkit-box-shadow: 0 0 0px 1000px white inset
+
+#app
+  height 100%
+  min-height 600px
+
+.h100
+  height 100%
+
+.w100
+  width 100%
+
+.pr
+  position relative
+
+.pa
+  position absolute
+
+.fl
+  float: left
+
+.fr
+  float: right
+
+.flex
+  display: flex
+
+.flex-wrap
+  flex-wrap: wrap
+
+.flex-item
+  flex: 1
+
+.align-center
+  align-items: center
+
+.between
+  justify-content: space-between
+
+.justify-center
+  justify-content: center
+
+.direction-column
+  flex-direction: column
+
+.direction-row
+  flex-direction: row
+
+.amap-marker-label
+  border: 0
+  background-color: transparent
+.marker-info
+  background #ffffff
+  border-radius 3px
+  padding 3px 5px
+  box-shadow 0 0 2px 1px rgba(73, 144, 215, .35)
+
+.tc
+  text-align center
+
+// 滚动条
+.scroll-bar::-webkit-scrollbar, .ivu-scroll-container::-webkit-scrollbar, .ivu-tooltip-inner::-webkit-scrollbar, .ivu-table-overflowY::-webkit-scrollbar
+  width 6px
+  height 5px
+.scroll-bar::-webkit-scrollbar-button, .ivu-scroll-container::-webkit-scrollbar-button, .ivu-tooltip-inner::-webkit-scrollbar-button, .ivu-table-overflowY::-webkit-scrollbar-button
+  display none
+.scroll-bar::-webkit-scrollbar-track, .ivu-scroll-container::-webkit-scrollbar-track, .ivu-tooltip-inner::-webkit-scrollbar-track, .ivu-table-overflowY::-webkit-scrollbar-track
+  background #ffffff
+.scroll-bar::-webkit-scrollbar-thumb, .ivu-scroll-container::-webkit-scrollbar-thumb, .ivu-tooltip-inner::-webkit-scrollbar-thumb, .ivu-table-overflowY::-webkit-scrollbar-thumb
+  background #eeeeee
+  border-radius 4px
+
+.br:after
+  content: ""
+  position: absolute
+  bottom: 0
+  left: 0
+  width: 200%
+  height: 200%
+  transform: scale(0.5, 0.5)
+  transform-origin: 0 0
+  z-index: 1
+
+.a-br:after
+  border: 1px solid #ddd
+  top: 0
+  z-index: -1
+
+.b-br:after
+  height: 0
+  bottom: 0
+  border-bottom: 1px solid #ddd
+
+.t-br:after
+  height: 0
+  top: 0
+  border-top: 1px solid #ddd
+
+.l-br:after
+  width: 0
+  left: 0
+  border-left: 1px solid #ddd
+
+.r-br:after
+  width: 0
+  right: 0
+  left: auto
+  border-right: 1px solid #ddd
+  top: 0
+
+.clearfix:after
+  content: ''
+  height: 0
+  width: 0
+  display: block
+  clear: both
+  
+.logo
+  width 110px
+
+// 间距
+.mt12
+  margin-top 12px
+.mt10
+  margin-top 10px
+.mt8
+  margin-top 8px
+.mt6
+  margin-top 6px
+.mt5
+  margin-top 5px
+.mt4
+  margin-top 4px
+.mt3
+  margin-top 3px
+.mt2
+  margin-top 2px
+.mt1
+  margin-top 1px
+
+.f-black
+  color #333333
+
+.modal-title
+  font-size 16px
+  font-weight bold
+
+// 重置Alert, Meaasge样式
+.vertical-center-modal
+  display flex
+  align-items center
+  justify-content center
+  .ivu-modal
+    top 0
+.ivu-message-notice-content
+  padding 0 !important
+  background none !important
+  box-shadow none !important
+.ivu-message-custom-content
+  font-size 16px
+  display none
+.icon-ivu-message
+  font-size 18px
+
+.ivu-alert
+  font-size 14px
+  padding 10px 40px !important
+
+.ivu-icon-ios-alert
+  font-size 16px
+
+.ivu-tooltip-inner
+  max-height 500px !important
+  overflow-y scroll
+
+// 动画
+.voiceSignal
+  .line
+    animation voiceSignal .6s linear infinite
+    &:nth-child(2)
+      animation-delay .2s
+    &:nth-child(2)
+      animation-delay .3s
+@keyframes voiceSignal
+  from
+    width 5px
+  to
+    width 30px
+    
+.demo-spin-icon-load
+  animation ani-demo-spin 1s linear infinite
+
+@keyframes ani-demo-spin
+    from
+      transform: rotate(0deg)
+    50%
+      transform: rotate(180deg)
+    to
+      transform: rotate(360deg)
+
+.slideToggle
+  animation slidetoggle .15s ease-out 1
+
+@keyframes slidetoggle
+    from
+      height 0
+      transform translateY(-20px)
+    to
+      height 150px
+      transform translateY(0)
+
+.shine
+  animation shine 1.5s linear infinite
+
+@keyframes shine
+    from
+      border 3px dashed rgba(255, 255, 255, .4)
+    50%
+      border 3px dashed rgba(255, 255, 255, .1)
+    to
+      border 3px dashed rgba(255, 255, 255, .4)
+
+.alarm-ani
+  animation alarm 1s linear infinite
+
+@keyframes alarm
+    from
+      transform scale(0.8, 0.2)
+      border 2px solid #ef0b0b
+      top 2px
+    50%
+      transform scale(1.2, 0.2)
+      border 3px solid #ef0b0b
+      top -10px
+    to
+      transform scale(0.8, 0.2)
+      border 2px solid #ef0b0b
+      top 2px
+
+.slide-right
+  animation slideRight .3s ease-in 1
+
+@keyframes slideRight
+    from
+      transform translateX(400px)
+    to
+      transform translateX(0)
+
+.slide-left
+  animation slideLeft .3s ease-in 1
+
+@keyframes slideLeft
+    from
+      transform translateX(0)
+    to
+      transform translateX(400)

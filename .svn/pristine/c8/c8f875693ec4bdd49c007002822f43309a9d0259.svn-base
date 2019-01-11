@@ -1,0 +1,230 @@
+<template>
+<div class="map-wrap pr h100">
+  <div class="map-container h100" id="amap" ref="amap">
+  </div>
+  <right-menu ref="menu"
+              v-if="isMenuShow"
+              @on-set-defaut="setDefaultCenter"
+              @on-move="handleMoveToDefaultPoint"/>
+</div>
+</template>
+
+<script>
+import {passiveEvent} from '@/utils/compatible'
+import TempMember from './temp-member'
+import {filterObjArrByKey} from '@/utils/utils'
+import * as map from '@/store/types/map'
+import * as app from '@/store/types/app'
+import RightMenu from './right-menu'
+import Storage from '@/utils/localStorage'
+import mixin from './mixin'
+import storeMixin from '@/store/mixins/mixin'
+
+
+export default {
+  name: 'AMapMonitoring',
+  mixins: [mixin, storeMixin],
+  components: {TempMember, RightMenu},
+  data () {
+    return {
+      map: null,
+      timer: null,
+      shapeOriginPoint: null
+    }
+  },
+  mounted () {
+    this.$refs.amap.addEventListener('mousedown', (ev) => {
+      this.handleStartDrag(ev)
+    }, true)
+
+    this.$refs.amap.addEventListener('mouseup', (ev) => {
+      this.handleEndDrag(ev)
+    }, true)
+
+    this.asycnInitAmap().then(() => {
+      AMap.plugin('AMap.ToolBar', () => {//异步加载插件
+          let toolbar = new AMap.ToolBar()
+          this.map.addControl(toolbar)
+      })
+    })
+  },
+  methods: {
+    asycnInitAmap () {
+      return new Promise((resolve, reject) => {
+        this.centerPoint = this.objLatlngToArrLnglat(this.centerPoint)
+        window.onLoad  = () => {
+          this.map = new AMap.Map('amap', {
+            zoom: 13,
+            center: this.centerPoint || {lat: 39.989628, lng: 116.480983}
+          })
+
+          this.map.on('rightclick', rightEvent => {
+            this.isDragShape = false
+            this.getRightMenu(rightEvent)
+            this.map.setStatus({
+              dragEnable: true,
+              zoomEnable: true
+            })
+          })
+
+          this.map.on('click', (ev) => {
+            this.isMenuShow = false
+          })
+
+          this.map.on('mousemove', ev => {
+          if (this.isDragShape && !this.isMenuShow) {
+            if (this.dragStartTime === 0) {
+              this.shapeOriginPoint = new Array(ev.lnglat.lng, ev.lnglat.lat)
+              this.dragBounds = this.createBounds(ev.lnglat.lng, ev.lnglat.lat, ev.lnglat.lng, ev.lnglat.lat)
+              this.dragStartTime = this.getTimeNow()
+            } else {
+              if (this.dragShape) this.clearShape()
+              this.dragDirection(ev.lnglat.lat, this.shapeOriginPoint.lat, ev.lnglat.lng, this.shapeOriginPoint.lng)
+            }
+            this.dragShape = this.createShape({bounds: this.dragBounds})
+            this.dragShape.setMap(this.map)
+            this.dragEv = ev
+          }
+        })
+          this.setMarkers()
+          resolve()
+        }
+        let url = 'https://webapi.amap.com/maps?v=1.4.8&key=688cc2b560762ab60c38207623d82b79&callback=onLoad';
+        let jsapi = document.createElement('script');
+        jsapi.charset = 'utf-8';
+        jsapi.src = url;
+        document.head.appendChild(jsapi);
+      })
+    },
+    addMarker (point, isAlarm) {
+      if (point && this.map) {
+        let marker = new AMap.Marker({
+          position: new AMap.LngLat(point.lng, point.lat),
+          icon: isAlarm ? this.redIconImage : this.iconImage,
+          title: point.mid
+        })
+        let name = this.allMembersObj[point.mid].name
+        marker.setLabel({
+            content: `<div class="marker-info">${name}</div>`,
+            offset: new AMap.Pixel(32,-12)
+        })
+        marker.setClickable(true)
+        this.map &&this.map.add(marker)
+      }
+    },
+    createShape ({bounds, fillOpacity = 0.35}) {
+      return new AMap.Rectangle({
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#FF0000',
+        fillOpacity: fillOpacity,
+        bounds: bounds || this.map.getBounds(),
+      })
+    },
+    createBounds (west, south, east, north) {
+      let southWest = new AMap.LngLat(west, south)
+      let northEast = new AMap.LngLat(east, north)
+      return new AMap.Bounds(southWest, northEast)
+    },
+    dragDirection (nowLat, prevLat, nowLng, prevLng) {
+      if (nowLat > prevLat && nowLng > prevLng) {
+        this.dragBounds = this.createBounds(this.shapeOriginPoint[0], this.shapeOriginPoint[1], nowLng, nowLat)
+      } else if (nowLat > prevLat  && nowLng <= prevLng) {
+        this.dragBounds = this.createBounds(nowLng, this.shapeOriginPoint[1], this.shapeOriginPoint[0], nowLat)
+      } else if (nowLat <= prevLat && nowLng <= prevLng) {
+        this.dragBounds = this.createBounds(nowLng, nowLat, this.shapeOriginPoint[0], this.shapeOriginPoint[1])
+      } else {
+        this.dragBounds = this.createBounds(this.shapeOriginPoint[0], nowLat, nowLng, this.shapeOriginPoint[1])
+      }
+    },
+    handleStartDrag (ev) {
+      this.startDrag(ev).then(() => {
+        this.map.setStatus({
+          dragEnable: false,
+          zoomEnable: false
+        })
+      })
+    },
+    handleEndDrag (ev) {
+      if (ev.button === 2 && this.isDragShape && this.dragEv) {
+        this.dragDirection(this.dragEv.lnglat.lat, this.shapeOriginPoint[1], this.dragEv.lnglat.lng, this.shapeOriginPoint[0])
+        this.endDrag(ev, 'AMAP_PART').then(() => {
+          this.map.setStatus({
+            dragEnable: true,
+            zoomEnable: true
+          })
+        })
+      }
+    },
+    objLatlngToArrLnglat (point) {
+      if (point && !Array.isArray(point)) {
+        let {lng, lat} = point
+        return new Array(lng, lat)
+      } else {
+        return point
+      }
+    },
+    handleMoveToDefaultPoint () {
+      this.moveToDefaultPoint().then((point) => {
+        this.map.panTo(this.objLatlngToArrLnglat(point))
+      }).catch(() => {
+        this.messageAlert('warning', this.languageCtx.noDefaultCenterPoint)
+      })
+    },
+    filterRenderMarker (point) {
+      let markers = this.map ? this.map.getAllOverlays('marker') : []
+      let _point = markers.find((item, index) => {
+        return (item.F.title === point.mid) || (item.F.title === point)
+      })
+      let newIsAlarm = typeof point !== 'string' && this.isAlarm(point)
+      return {new: point, old: _point, newIsAlarm}
+    }
+  },
+  watch: {
+    gpsPoint (point, oldPoint) {
+      if (this.map) {
+        this.$store.commit(app.SetAppLoading, false)
+        let list = [...this.GPSList]
+        if (!oldPoint && typeof point !== 'string') {
+          this.addMarker(point, this.isAlarm(point))
+          this.map.panTo([point.lng, point.lat])
+          list.push(point)
+        } else {
+          let pointObj = this.filterRenderMarker(point)
+          pointObj.old && this.map.remove(pointObj.old)
+          if (pointObj.old) {
+            list = list.filter(item => {
+              return item.mid !== point.mid
+            })
+            typeof point !== 'string' && list.push(point)
+          }
+          typeof point !== 'string' && this.addMarker(pointObj.new, pointObj.newIsAlarm)
+          let markers = this.map.getAllOverlays('marker')
+          if (markers.length === 1) {
+            this.map.panTo([markers[0].F.position.lng, markers[0].F.position.lat])
+          }
+        }
+        this.GPSList = list
+      } else {
+        this.$store.commit(app.SetAppLoading, true)
+      }
+    },
+    isToCenter (val) {
+      if (val && val.isPan) {
+        this.map.panTo([val.point.lng, val.point.lat])
+        this.isToCenter = false
+      }
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.marker-info
+  background #ffffff
+  border-radius 3px
+  padding 2px 5px
+</style>
+
+
