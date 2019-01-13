@@ -123,8 +123,6 @@ export default {
       font-size 14px
       &.time-wrap
         text-align right
-      .time
-        width 132px
 .online
   color #15a00d
 .offline

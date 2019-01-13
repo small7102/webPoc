@@ -14,7 +14,7 @@ export function getTrees (list, parentId) {
   return formatTree(items, parentId)
 }
 
-/** 
+/**
 * 利用递归格式化每个节点
 */
 function formatTree (items, parentId, deep = 0) {
@@ -182,21 +182,21 @@ export function deepClone(obj) {
  * @param {Number} startType 要返回的时间字符串的格式类型，传入'year'则返回年开头的完整时间
  */
 export function dateFmt(fmt,date) {
-  const o = {   
-    "M+" : date.getMonth()+1,                 //月份   
-    "d+" : date.getDate(),                    //日   
-    "h+" : date.getHours(),                   //小时   
-    "m+" : date.getMinutes(),                 //分   
-    "s+" : date.getSeconds(),                 //秒   
-    "q+" : Math.floor((date.getMonth()+3)/3), //季度   
-    "S"  : date.getMilliseconds()             //毫秒   
-  };   
-  if(/(y+)/.test(fmt))   
-    fmt=fmt.replace(RegExp.$1, (date.getFullYear()+"").substr(4 - RegExp.$1.length));   
-  for(var k in o)   
-    if(new RegExp("("+ k +")").test(fmt))   
-  fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));   
-  return fmt;   
+  const o = {
+    "M+" : date.getMonth()+1,                 //月份
+    "d+" : date.getDate(),                    //日
+    "h+" : date.getHours(),                   //小时
+    "m+" : date.getMinutes(),                 //分
+    "s+" : date.getSeconds(),                 //秒
+    "q+" : Math.floor((date.getMonth()+3)/3), //季度
+    "S"  : date.getMilliseconds()             //毫秒
+  };
+  if(/(y+)/.test(fmt))
+    fmt=fmt.replace(RegExp.$1, (date.getFullYear()+"").substr(4 - RegExp.$1.length));
+  for(var k in o)
+    if(new RegExp("("+ k +")").test(fmt))
+  fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+  return fmt;
 }
 
 //防抖
@@ -226,7 +226,7 @@ export function throttle(fun, delay) {
               last = now
               fun.apply(that, _args)
           }, delay)
-      }else {       
+      }else {
           last = now
           console.log('last:'+last)
           fun.apply(that,_args)
@@ -266,4 +266,14 @@ export function isInContent (obj, parent) {
     obj = obj.parentNode
   }
   return false
+}
+
+export function getClientHeight () {
+  let clientHeight=0
+  if (document.body.clientHeight&&document.documentElement.clientHeight) {
+    clientHeight = (document.body.clientHeight<document.documentElement.clientHeight)?document.body.clientHeight:document.documentElement.clientHeight
+  } else {
+    clientHeight = (document.body.clientHeight>document.documentElement.clientHeight)?document.body.clientHeight:document.documentElement.clientHeight
+  }
+  return clientHeight
 }

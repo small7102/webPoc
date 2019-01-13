@@ -13,20 +13,20 @@
                 <span class="online" v-html="`[${getOnline[item.gid].onlineNum}/${getOnline[item.gid].all}]`"></span>
               </div>
               <Icon class="switch-icon"
-                    type="md-swap" 
-                    size="18" 
-                    color="#4990d7" 
+                    type="md-swap"
+                    size="18"
+                    color="#4990d7"
                     v-if="switchGid === item.gid"
                     :title="languageCtx.iconTitle"
                     @click.stop="handleSwitchGroup(item)"/>
             </div>
           <template>
-            <sub-group :groupList="item.children" 
-                       @on-scroll="toScroll" 
+            <sub-group :groupList="item.children"
+                       @on-scroll="toScroll"
                        @on-hover="handleHover"
                        :ref="`group${item.gid}`"/>
             <member-list :gid="item.gid"
-                         :paddingLeftStyle="getPaddingLeft(item.deep)" 
+                         :paddingLeftStyle="getPaddingLeft(item.deep)"
                          :ref="`member${item.gid}`"
                          @on-scroll="toScroll"
                          @on-hover="handleHover"
@@ -37,10 +37,11 @@
     </Menu>
     <transition>
       <div class="right-menu"
-          v-show="isRightMenuShow" 
-          :style="{top: `${rightMenuTop}`}"
+          v-show="isRightMenuShow"
+          :style="setMenuY"
           @mouseleave="handleMOuseleave"
           @click="handleRightEvents"
+          ref="rightMenu"
           >
         <Card class="menu-card" :padding="0">
           <div class="menu-line flex align-center" ref="info">
@@ -49,7 +50,7 @@
           <!-- <div class="menu-line flex align-center" v-if="rightMenuSelectMember && rightMenuSelectMember.type!=='20'">
               轨迹回放
           </div> -->
-          <div class="menu-line flex align-center" ref="callset" v-if="rightMenuSelectMember && rightMenuSelectMember.type!=='20'">    
+          <div class="menu-line flex align-center" ref="callset" v-if="rightMenuSelectMember && rightMenuSelectMember.type!=='20'">
               <Icon class="icon" type="ios-mic-outline" size="20" color="#d6852f"/><span>{{languageCtx.callsetInfo.title}}</span>
           </div>
           <div class="menu-line flex align-center" ref="messages" v-if="rightMenuSelectMember  && rightMenuSelectMember.cid!==user.msId">
@@ -72,7 +73,7 @@
 
 import MemberList from './member-list'
 import SubGroup from './sub-group-tree'
-import { filterArr, getTreeList, uniqueArr, isInContent } from '@/utils/utils'
+import { filterArr, getTreeList, uniqueArr, isInContent, getClientHeight } from '@/utils/utils'
 import * as types from '@/store/types/group'
 import mixin from '@/store/mixins/mixin'
 import mx from './mixin'
@@ -96,6 +97,7 @@ export default {
       isFirstInit: true,
       isRightMenuShow: false,
       rightMenuTop: 0,
+      rightMenuBottom: 0,
       rightMenuSelectMember: null
     }
   },
@@ -106,6 +108,16 @@ export default {
     },
     openGroup () {
       return this.$store.getters.openGroup
+    },
+    setMenuY ()  {
+      if (!this.rightMenuTop) {
+        return {
+          bottom: this.rightMenuBottom
+        }
+      }
+      return {
+        top: this.rightMenuTop
+      }
     }
   },
   methods: {
@@ -142,8 +154,15 @@ export default {
       this.$refs.scroll.scrollTop = distance
     },
     handleHover ({top, item, show}) {
+      let clientHeight = getClientHeight()
       this.isRightMenuShow = show
-      this.rightMenuTop = `${top + 10}px`
+      if ((clientHeight - top) > 90) {
+        this.rightMenuTop = `${top + 10}px`
+        this.rightMenuBottom = null
+      } else {
+        this.rightMenuBottom = `${clientHeight - top + 10}px`
+        this.rightMenuTop = 0
+      }
       this.rightMenuSelectMember = item
     },
     handleRightEvents (ev) {

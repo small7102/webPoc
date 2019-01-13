@@ -81,7 +81,9 @@ export default {
     }
   },
   created () {
+    Storage.localRemove('myTempInfo')
     this.myTempInfo = Storage.localGet('myTempInfo')
+    console.log('xxx', this.myTempInfo)
     this.myRecentTempInfo = Storage.localGet('myRecentTempInfo')
   },
   mounted () {
@@ -94,8 +96,8 @@ export default {
       let list = [...this.tempGroupList]
       list.splice(index, 1)
       this.tempGroupList = list
-
-      this.myTempInfo[this.userId] = list
+      console.log('yyy', this.myTempInfo)
+      if (this.myTempInfo) this.myTempInfo[this.userId] = list
       Storage.localSet('myTempInfo', this.myTempInfo)
     },
     deleteAllTempGroup () {
